@@ -65,7 +65,7 @@ public class AnnotationPipeline {
 
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationPipeline.class);
 
-    private static void annotateJob(String[] args, String filename, String outputFilename, String outputFormat, String isoformOverride,
+    private static void annotateJob(String[] args, String filename, String outputFilename, String outputFormat, boolean sortOutput, String isoformOverride,
                                     String errorReportLocation, boolean replace, String postIntervalSize) throws Exception {
         SpringApplication app = new SpringApplication(AnnotationPipeline.class);
         app.setWebApplicationType(WebApplicationType.NONE);
@@ -75,14 +75,15 @@ public class AnnotationPipeline {
 
         Job annotationJob = ctx.getBean(BatchConfiguration.ANNOTATION_JOB, Job.class);
         JobParameters jobParameters = new JobParametersBuilder()
-            .addString("filename", filename)
-            .addString("outputFilename", outputFilename)
-            .addString("outputFormat", outputFormat)
-            .addString("replace", String.valueOf(replace))
-            .addString("isoformOverride", isoformOverride)
-            .addString("errorReportLocation", errorReportLocation)
-            .addString("postIntervalSize", postIntervalSize)
-            .toJobParameters();
+                .addString("filename", filename)
+                .addString("outputFilename", outputFilename)
+                .addString("outputFormat", outputFormat)
+                .addString("sortOutput", String.valueOf(sortOutput))
+                .addString("replace", String.valueOf(replace))
+                .addString("isoformOverride", isoformOverride)
+                .addString("errorReportLocation", errorReportLocation)
+                .addString("postIntervalSize", postIntervalSize)
+                .toJobParameters();
         JobExecution jobExecution = jobLauncher.run(annotationJob, jobParameters);
         if (!jobExecution.getExitStatus().equals(ExitStatus.COMPLETED)) {
             System.exit(2);
@@ -215,7 +216,9 @@ public class AnnotationPipeline {
             }
         }
         try {
-            annotateJob(args, subcommand.getOptionValue("filename"), subcommand.getOptionValue("output-filename"), outputFormat, subcommand.getOptionValue("isoform-override"),
+            annotateJob(args, subcommand.getOptionValue("filename"), subcommand.getOptionValue("output-filename"), outputFormat,
+                    subcommand.hasOption("sort-output"),
+                    subcommand.getOptionValue("isoform-override"),
                     subcommand.getOptionValue("error-report-location", ""),
                     subcommand.hasOption("replace-symbol-entrez"), subcommand.getOptionValue("post-interval-size", "100"));
             // When you change the default value of post-interval-size, do not forget to update MutationRecordReader.postIntervalSize accordingly

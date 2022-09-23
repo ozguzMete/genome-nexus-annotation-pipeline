@@ -33,6 +33,7 @@ public class AnnotateSubcommand implements Subcommand {
                 .addOption("f", "filename", true, "Mutation filename")
                 .addOption("o", "output-filename", true, "Output filename (including path)")
                 .addOption("t", "output-format", true, "extended, minimal or a file path which includes output format (FORMAT EXAMPLE: Chromosome,Hugo_Symbol,Entrez_Gene_Id,Center,NCBI_Build)")
+                .addOption("s", "sort-output", false, "Sort output")
                 .addOption("i", "isoform-override", true, "Isoform Overrides (mskcc or uniprot)")
                 .addOption("e", "error-report-location", true, "Error report filename (including path)")
                 .addOption("r", "replace-symbol-entrez", false, "Replace gene symbols and entrez id with what is provided by annotator")

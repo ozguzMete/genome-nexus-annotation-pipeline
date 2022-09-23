@@ -28,29 +28,38 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package org.cbioportal.annotation.pipeline;
 
-import java.io.*;
-import java.util.*;
-import java.nio.file.*;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.batch.item.*;
-import org.springframework.batch.item.file.*;
+import org.springframework.batch.item.ExecutionContext;
+import org.springframework.batch.item.ItemStreamException;
+import org.springframework.batch.item.ItemStreamWriter;
+import org.springframework.batch.item.file.FlatFileHeaderCallback;
+import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
-import org.cbioportal.models.AnnotatedRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
- *
  * @author Zachary Heins
  */
 public class MutationRecordWriter implements ItemStreamWriter<String> {
 
     @Value("#{jobParameters[outputFilename]}")
     private String outputFilename;
+
+    @Value("#{jobParameters[sortOutput]}")
+    private boolean sortOutput;
 
     @Value("#{stepExecutionContext['commentLines']}")
     private List<String> commentLines;
@@ -72,7 +81,7 @@ public class MutationRecordWriter implements ItemStreamWriter<String> {
 
             PassThroughLineAggregator aggr = new PassThroughLineAggregator();
             flatFileItemWriter.setLineAggregator(aggr);
-            flatFileItemWriter.setResource( new FileSystemResource(stagingFile.toString()));
+            flatFileItemWriter.setResource(new FileSystemResource(stagingFile.toString()));
             flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
                 @Override
                 public void writeHeader(Writer writer) throws IOException {
@@ -88,7 +97,8 @@ public class MutationRecordWriter implements ItemStreamWriter<String> {
     }
 
     @Override
-    public void update(ExecutionContext ec) throws ItemStreamException {}
+    public void update(ExecutionContext ec) throws ItemStreamException {
+    }
 
     @Override
     public void close() throws ItemStreamException {
@@ -99,6 +109,11 @@ public class MutationRecordWriter implements ItemStreamWriter<String> {
 
     @Override
     public void write(List<? extends String> items) throws Exception {
+        if (sortOutput) {
+            List<? extends String> tmp = new ArrayList<>(items);
+            Collections.sort(tmp);
+            items = tmp;
+        }
         if (recordsToWriteCount > 0) {
             flatFileItemWriter.write(items);
         }
